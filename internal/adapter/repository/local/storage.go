@@ -3,7 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
-	"github.com/andreychano/compressor-golang/core/domain"
+	"github.com/andreychano/compressor-golang/pkg/core/domain"
 	"io"
 	"os"
 	"path/filepath"

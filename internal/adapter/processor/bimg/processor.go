@@ -3,7 +3,7 @@ package bimg
 import (
 	"bytes"
 	"fmt"
-	"github.com/andreychano/compressor-golang/core/domain"
+	"github.com/andreychano/compressor-golang/pkg/core/domain"
 	"github.com/h2non/bimg"
 	"io"
 )
