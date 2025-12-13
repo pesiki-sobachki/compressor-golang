@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/andreychano/compressor-golang/internal/adapter/processor/bimg"
 	"github.com/andreychano/compressor-golang/internal/adapter/repository/local"
+	"github.com/andreychano/compressor-golang/internal/adapter/repository/local/pathvalidator"
 	"github.com/andreychano/compressor-golang/pkg/core/domain"
 	"github.com/andreychano/compressor-golang/pkg/core/service"
 )
@@ -90,6 +92,12 @@ func main() {
 
 		fileInfo, err := svc.GetFile(c.Request.Context(), path)
 		if err != nil {
+			var vErr *pathvalidator.ValidationError
+			if errors.As(err, &vErr) {
+				// TODO: WARN-лог про невалидный путь: vErr.Error()
+				c.JSON(http.StatusBadRequest, gin.H{"error": vErr.Error()})
+				return
+			}
 			c.JSON(http.StatusNotFound, gin.H{"error": "File not found or access denied"})
 			return
 		}
