@@ -32,38 +32,36 @@
 
 ```text
 /
-├── INSTALL.md                       # Инструкция по установке и запуску
 ├── Makefile                         # Сборка и установка зависимостей (make deps/build/run)
-├── README.md                        # Обзор проекта и документация по API
+├── compressor/
+│   └── api.go                       # Публичный фасад и DTO для использования как библиотеки
 ├── cmd/
 │   └── api/
 │       └── main.go                  # Точка входа приложения (HTTP-сервер)
 ├── go.mod                           # Модуль и зависимости Go
 ├── go.sum                           # Контрольные суммы модулей Go
-├── internal/
-│   ├── adapter/                     # Адаптеры (реализации портов)
-│   │   ├── inbound/
-│   │   │   └── http/
-│   │   │       └── handler.go       # HTTP-хендлеры (REST API)
-│   │   └── outbound/
-│   │       ├── processor/
-│   │       │   └── bimg/
-│   │       │       └── processor.go # Адаптер процессора изображений (libvips/bimg)
-│   │       └── repository/
-│   │           └── local/
-│   │               ├── pathvalidator/
-│   │               │   └── validator.go  # Валидация путей и защита от Path Traversal
-│   │               └── storage.go        # Локальное файловое хранилище
-│   └── core/                        # Доменная логика и порты
-│       ├── domain/
-│       │   └── file.go              # Модели домена (файл, опции сжатия и т.п.)
-│       ├── port/
-│       │   ├── processor.go         # Порты для процессора изображений
-│       │   └── repository.go        # Порты для хранилища файлов
-│       └── service/
-│           └── compression.go       # Сервисы сжатия и сохранения файлов
-└── pkg/
-    └── test.go                      # Публичные тестовые утилиты
+└── internal/
+    ├── adapter/                     # Адаптеры (реализации портов)
+    │   ├── inbound/
+    │   │   └── http/
+    │   │       └── handler.go       # HTTP-хендлеры (REST API)
+    │   └── outbound/
+    │       ├── processor/
+    │       │   └── bimg/
+    │       │       └── processor.go # Адаптер процессора изображений (libvips/bimg)
+    │       └── repository/
+    │           └── local/
+    │               ├── pathvalidator/
+    │               │   └── validator.go  # Валидация путей и защита от Path Traversal
+    │               └── storage.go        # Локальное файловое хранилище
+    └── core/                        # Домейн и бизнес-логика
+        ├── domain/
+        │   └── file.go              # Модели домена (файл, опции сжатия и т.п.)
+        ├── port/
+        │   ├── processor.go         # Порты для процессора изображений
+        │   └── repository.go        # Порты для хранилища файлов
+        └── service/
+            └── compression.go       # Сервисы сжатия и сохранения файлов
 ```
 
   
@@ -103,7 +101,56 @@ make run
 
 По умолчанию HTTP‑сервер слушает порт `8080` (может переопределяться конфигурацией или переменными окружения).
 
-  
+## 📚 Использование как библиотеки
+
+Помимо HTTP‑сервиса, проект можно использовать как отдельную Go‑библиотеку через пакет `compressor`.
+
+### Быстрый пример
+
+```go
+
+package main
+
+import (
+	"os"
+
+	"github.com/andreychano/compressor-golang/compressor"
+)
+
+func main() {
+	// Создаём компрессор с настройками по умолчанию (bimg + локальное файловое хранилище).
+	comp := compressor.NewDefault("./storage")
+
+	// Открываем входной файл.
+	f, err := os.Open("input.jpg")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	// Задаём опции сжатия.
+	opts := compressor.Options{
+		Format:    "webp", // целевой формат
+		Quality:   80,     // качество от 1 до 100
+		MaxWidth:  0,      // 0 = без ограничения по ширине
+		MaxHeight: 0,      // 0 = без ограничения по высоте
+	}
+
+	// Выполняем сжатие.
+	data, meta, err := comp.Compress(f, opts)
+	if err != nil {
+		panic(err)
+	}
+
+	// Сохраняем результат в файл.
+	if err := os.WriteFile("output.webp", data, 0o644); err != nil {
+		panic(err)
+	}
+
+	// При необходимости можно использовать метаданные результата.
+	_ = meta // meta.MimeType, meta.Size и т.п.
+}
+```
 
 ## 🛠 API документация
 
