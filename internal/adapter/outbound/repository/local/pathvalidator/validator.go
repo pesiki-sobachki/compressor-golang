@@ -1,5 +1,3 @@
-//go:build !test
-
 package pathvalidator
 
 import (
@@ -7,19 +5,19 @@ import (
 	"strings"
 )
 
-// Validator для строгой проверки путей файловой системы
+// Validator performs strict filesystem path validation.
 type Validator struct {
 	basePath string
 }
 
-// New создает новый валидатор с базовым путем
+// New creates a new validator with the given base path.
 func New(basePath string) *Validator {
 	return &Validator{
 		basePath: filepath.Clean(basePath),
 	}
 }
 
-// Validate проверяет путь на безопасность
+// Validate checks that the given relative path is safe to use.
 func (v *Validator) Validate(relativePath string) error {
 	if relativePath == "" {
 		return NewValidationError("empty path")
@@ -27,22 +25,22 @@ func (v *Validator) Validate(relativePath string) error {
 
 	cleanRelative := filepath.Clean(relativePath)
 
-	// 1. Directory traversal
+	// 1. Directory traversal.
 	if strings.Contains(cleanRelative, "..") {
 		return NewValidationError("path traversal attempt: contains ..")
 	}
 
-	// 2. Абсолютный путь
+	// 2. Absolute paths are not allowed.
 	if filepath.IsAbs(cleanRelative) {
 		return NewValidationError("absolute path not allowed")
 	}
 
-	// 3. Null bytes
+	// 3. Null bytes.
 	if strings.ContainsAny(cleanRelative, "\x00") {
 		return NewValidationError("null bytes not allowed")
 	}
 
-	// 4. Выход за пределы basePath (самый надежный чек)
+	// 4. Ensure the resolved path does not escape basePath.
 	resolvedPath := filepath.Join(v.basePath, cleanRelative)
 	resolvedClean := filepath.Clean(resolvedPath)
 
@@ -50,20 +48,20 @@ func (v *Validator) Validate(relativePath string) error {
 		return NewValidationError("path escapes base directory")
 	}
 
-	// 5. Unsafe символы (Windows/Unix)
+	// 5. Disallow unsafe characters (Windows/Unix).
 	unsafeChars := `*|"<>?`
 	for _, char := range unsafeChars {
-		if strings.ContainsRune(cleanRelative, rune(char)) {
+		if strings.ContainsRune(cleanRelative, char) {
 			return NewValidationError("unsafe characters not allowed")
 		}
 	}
 
-	// 6. Максимальная длина
+	// 6. Maximum length.
 	if len(cleanRelative) > 4096 {
 		return NewValidationError("path too long")
 	}
 
-	// 7. Leading slashes
+	// 7. Leading slashes are not allowed.
 	if strings.HasPrefix(cleanRelative, "/") || strings.HasPrefix(cleanRelative, "\\") {
 		return NewValidationError("leading slash not allowed")
 	}
@@ -71,7 +69,7 @@ func (v *Validator) Validate(relativePath string) error {
 	return nil
 }
 
-// ValidationError типизированная ошибка
+// ValidationError is a typed error for path validation failures.
 type ValidationError struct {
 	Reason string
 }

@@ -3,18 +3,21 @@ package bimg
 import (
 	"bytes"
 	"fmt"
+	"io"
+
 	"github.com/andreychano/compressor-golang/internal/pkg/core/domain"
 	"github.com/h2non/bimg"
-	"io"
 )
 
-type Processor struct {
-}
+// Processor implements image compression using bimg/libvips.
+type Processor struct{}
 
+// NewProcessor creates a new bimg-based processor.
 func NewProcessor() *Processor {
 	return &Processor{}
 }
 
+// Supports reports whether the given MIME type is supported.
 func (p *Processor) Supports(mimeType string) bool {
 	switch mimeType {
 	case "image/jpeg", "image/png", "image/webp":
@@ -24,50 +27,32 @@ func (p *Processor) Supports(mimeType string) bool {
 	}
 }
 
+// Process compresses the input file according to the provided options.
 func (p *Processor) Process(inputFile domain.File, opts domain.Options) (domain.File, error) {
-	//Сброс чтения в начало
 	if _, err := inputFile.Content.Seek(0, 0); err != nil {
-		//неудачный сборс чтения
 		return domain.File{}, fmt.Errorf("failed to seek file content: %w", err)
 	}
-	//Чтение и запись в буфер
+
 	buffer, err := io.ReadAll(inputFile.Content)
 	if err != nil {
-		return domain.File{}, fmt.Errorf("Cannot read: %w", err)
+		return domain.File{}, fmt.Errorf("cannot read: %w", err)
 	}
 
-	/*Вернем заглушку
-
-	return domain.File{}, nil
-	*/
-
-	img := bimg.NewImage(buffer) // Посыл файла в компрессор
-
-	//Настройка параметров сжатия
+	img := bimg.NewImage(buffer)
 
 	processOptions := bimg.Options{
-		Quality:       opts.Quality, //Берем качество из наших настроек
-		StripMetadata: true,         // Удаляем лишние метаданные
+		Quality:       opts.Quality,
+		StripMetadata: true,
 	}
-
-	//сжатие
 
 	processedBuffer, err := img.Process(processOptions)
 	if err != nil {
 		return domain.File{}, fmt.Errorf("failed to process image: %w", err)
 	}
 
-	// Теперь есть буфер processedBuffer со сжатыми байтами
-	//Теперь надо вернуть их как domain.File
-
 	return domain.File{
-		//Превращаем байты обратно в reader
-		Content: bytes.NewReader(processedBuffer),
-		//укажем что это (посто напишем что было или jpeg)
-		// для простоты пока просто пишем "image/"
+		Content:  bytes.NewReader(processedBuffer),
 		MimeType: "image/" + opts.Format,
-		//размер новых данных
-		Size: int64(len(processedBuffer)),
+		Size:     int64(len(processedBuffer)),
 	}, nil
-
 }

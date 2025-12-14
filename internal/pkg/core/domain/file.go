@@ -1,17 +1,17 @@
-package domain 
+package domain
 
 import "io"
 
-type File struct{
-	Content		io.ReadSeeker 	// Поток данных который можно перечитывать
-	MimeType	string		//Тип контента, например "image/jpeg"
-	Size		int64		//Размер в байтах
+type File struct {
+	Content  io.ReadSeeker // Re-readable file content stream
+	MimeType string        // MIME type, e.g. "image/jpeg"
+	Size     int64         // File size in bytes
 }
 
-//Options определяет параметры для операции сжатия
-type Options struct{
-	Format 		string	//Целевой формат (webp, jpeg)
-	Quality		int	//Качество сжатия
-	MaxWidth	int	//Максимальная ширина
-	MaxHeight	int	//Максимальная высота
+// Options defines parameters for compression operations.
+type Options struct {
+	Format    string // Target format (e.g. "webp", "jpeg")
+	Quality   int    // Compression quality
+	MaxWidth  int    // Maximum width in pixels
+	MaxHeight int    // Maximum height in pixels
 }

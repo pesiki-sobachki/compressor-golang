@@ -16,7 +16,7 @@ type LocalFileStorage struct {
 	pathValidator *pathvalidator.Validator
 }
 
-// NewLocalFileStorage инициализирует сторедж и валидатор путей.
+// NewLocalFileStorage initializes local storage and path validator.
 func NewLocalFileStorage(basePath string) *LocalFileStorage {
 	return &LocalFileStorage{
 		basePath:      basePath,
@@ -25,14 +25,10 @@ func NewLocalFileStorage(basePath string) *LocalFileStorage {
 }
 
 func (s *LocalFileStorage) Save(ctx context.Context, file domain.File, relativePath string) (string, error) {
-	// 1. Валидация относительного пути
 	if err := s.pathValidator.Validate(relativePath); err != nil {
-		// TODO: здесь потом WARN-лог вида:
-		// logger.Warnf("path validation failed in Save: %v", err)
 		return "", fmt.Errorf("access denied: invalid path")
 	}
 
-	// 2. Строим абсолютный путь только после успешной валидации
 	fullPath := filepath.Join(s.basePath, relativePath)
 
 	dir := filepath.Dir(fullPath)
@@ -58,14 +54,7 @@ func (s *LocalFileStorage) Save(ctx context.Context, file domain.File, relativeP
 }
 
 func (s *LocalFileStorage) Get(ctx context.Context, relativePath string) (domain.File, error) {
-	// было:
-	// if err := s.pathValidator.Validate(relativePath); err != nil {
-	//     return domain.File{}, fmt.Errorf("access denied: invalid path")
-	// }
-
-	// нужно так:
 	if err := s.pathValidator.Validate(relativePath); err != nil {
-		// не меняем тип ошибки, просто пробрасываем
 		return domain.File{}, err
 	}
 

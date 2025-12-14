@@ -6,11 +6,9 @@ import (
 	"github.com/andreychano/compressor-golang/internal/pkg/core/domain"
 )
 
-// File repisitory определяет контракт для хранения файлов
+// File repository defines a contract for file storage
 
 type FileRepository interface {
 	Save(ctx context.Context, file domain.File, path string) (string, error)
-
-	//Метод ищет файл по указанному пути и возвращает его, если таковой существует
 	Get(ctx context.Context, path string) (domain.File, error)
 }

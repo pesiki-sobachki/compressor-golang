@@ -2,10 +2,8 @@ package port
 
 import "github.com/andreychano/compressor-golang/internal/pkg/core/domain"
 
-// Processor определяет контракт для любого алгоритма компрессии.
+// Processor defines a contract for any compression algorithm
 type Processor interface {
-	// Process применяет компрессию к файлу.
 	Process(inputFile domain.File, opts domain.Options) (domain.File, error)
-	// Supports проверяет, может ли этот процессор обработать данный MIME-тип.
 	Supports(mimeType string) bool
 }
