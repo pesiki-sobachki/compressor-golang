@@ -8,7 +8,7 @@ import (
 	"github.com/andreychano/compressor-golang/internal/adapter/inbound/http"
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/processor/bimg"
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/repository/local"
-	"github.com/andreychano/compressor-golang/internal/pkg/core/service"
+	"github.com/andreychano/compressor-golang/internal/core/service"
 )
 
 func main() {

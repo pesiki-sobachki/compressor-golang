@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/repository/local/pathvalidator"
-	"github.com/andreychano/compressor-golang/internal/pkg/core/domain"
+	"github.com/andreychano/compressor-golang/internal/core/domain"
 )
 
 type LocalFileStorage struct {

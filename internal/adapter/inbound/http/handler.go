@@ -12,8 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/repository/local/pathvalidator"
-	"github.com/andreychano/compressor-golang/internal/pkg/core/domain"
-	"github.com/andreychano/compressor-golang/internal/pkg/core/service"
+	"github.com/andreychano/compressor-golang/internal/core/domain"
+	"github.com/andreychano/compressor-golang/internal/core/service"
 )
 
 type Handler struct {

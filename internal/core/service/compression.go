@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/andreychano/compressor-golang/internal/pkg/core/domain"
-	"github.com/andreychano/compressor-golang/internal/pkg/core/port"
+	"github.com/andreychano/compressor-golang/internal/core/domain"
+	"github.com/andreychano/compressor-golang/internal/core/port"
 	"github.com/google/uuid"
 )
 

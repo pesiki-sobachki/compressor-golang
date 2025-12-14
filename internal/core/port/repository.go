@@ -3,7 +3,7 @@ package port
 import (
 	"context"
 
-	"github.com/andreychano/compressor-golang/internal/pkg/core/domain"
+	"github.com/andreychano/compressor-golang/internal/core/domain"
 )
 
 // File repository defines a contract for file storage

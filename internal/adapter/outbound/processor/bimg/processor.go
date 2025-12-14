@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/andreychano/compressor-golang/internal/pkg/core/domain"
+	"github.com/andreychano/compressor-golang/internal/core/domain"
 	"github.com/h2non/bimg"
 )
 
