@@ -33,35 +33,38 @@
 
 ```text
 /
+├── INSTALL.md                       # Инструкция по установке и запуску
 ├── Makefile                         # Сборка и установка зависимостей (make deps/build/run)
+├── README.md                        # Обзор проекта и документация по API
 ├── cmd/
 │   └── api/
 │       └── main.go                  # Точка входа приложения (HTTP-сервер)
 ├── go.mod                           # Модуль и зависимости Go
 ├── go.sum                           # Контрольные суммы модулей Go
-└── internal/
-    ├── adapter/                     # Адаптеры (реализации портов)
-    │   ├── inbound/
-    │   │   └── http/
-    │   │       └── handler.go       # HTTP-хендлеры (REST API)
-    │   └── outbound/
-    │       ├── processor/
-    │       │   └── bimg/
-    │       │       └── processor.go # Адаптер процессора изображений (libvips/bimg)
-    │       └── repository/
-    │           └── local/
-    │               ├── pathvalidator/
-    │               │   └── validator.go  # Валидация путей и защита от Path Traversal
-    │               └── storage.go        # Локальное файловое хранилище
-    └── pkg/
-        └── core/                    # Домейн и бизнес-логика
-            ├── domain/
-            │   └── file.go          # Модели домена (файл, опции сжатия и т.п.)
-            ├── port/
-            │   ├── processor.go     # Порты для процессора изображений
-            │   └── repository.go    # Порты для хранилища файлов
-            └── service/
-                └── compression.go   # Сервисы сжатия и сохранения файлов
+├── internal/
+│   ├── adapter/                     # Адаптеры (реализации портов)
+│   │   ├── inbound/
+│   │   │   └── http/
+│   │   │       └── handler.go       # HTTP-хендлеры (REST API)
+│   │   └── outbound/
+│   │       ├── processor/
+│   │       │   └── bimg/
+│   │       │       └── processor.go # Адаптер процессора изображений (libvips/bimg)
+│   │       └── repository/
+│   │           └── local/
+│   │               ├── pathvalidator/
+│   │               │   └── validator.go  # Валидация путей и защита от Path Traversal
+│   │               └── storage.go        # Локальное файловое хранилище
+│   └── core/                        # Доменная логика и порты
+│       ├── domain/
+│       │   └── file.go              # Модели домена (файл, опции сжатия и т.п.)
+│       ├── port/
+│       │   ├── processor.go         # Порты для процессора изображений
+│       │   └── repository.go        # Порты для хранилища файлов
+│       └── service/
+│           └── compression.go       # Сервисы сжатия и сохранения файлов
+└── pkg/
+    └── test.go                      # Публичные тестовые утилиты
 ```
 
   
