@@ -1,6 +1,6 @@
 package port
 
-import "github.com/andreychano/compressor-golang/pkg/core/domain"
+import "github.com/andreychano/compressor-golang/internal/pkg/core/domain"
 
 // Processor определяет контракт для любого алгоритма компрессии.
 type Processor interface {

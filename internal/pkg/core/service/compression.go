@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"path/filepath" // Для работы с путями
 
-	"github.com/andreychano/compressor-golang/pkg/core/domain"
-	"github.com/andreychano/compressor-golang/pkg/core/port"
+	"github.com/andreychano/compressor-golang/internal/pkg/core/domain"
+	"github.com/andreychano/compressor-golang/internal/pkg/core/port"
 	"github.com/google/uuid" // для генерации уникальных имен
 )
 
