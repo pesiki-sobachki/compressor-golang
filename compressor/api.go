@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/processor/bimg"
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/repository/local"
@@ -43,9 +44,12 @@ func (c *Compressor) Compress(r io.Reader, opts Options) ([]byte, Result, error)
 		return nil, Result{}, fmt.Errorf("failed to read input: %w", err)
 	}
 
+	// Определяем MIME по содержимому.
+	mimeType := http.DetectContentType(buf.Bytes())
+
 	file := domain.File{
 		Content:  bytes.NewReader(buf.Bytes()),
-		MimeType: "",
+		MimeType: mimeType,
 		Size:     int64(buf.Len()),
 	}
 
