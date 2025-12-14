@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/andreychano/compressor-golang/internal/adapter/outbound/processor/bimg"
+	"github.com/andreychano/compressor-golang/internal/adapter/outbound/repository/local"
 	"github.com/andreychano/compressor-golang/internal/core/domain"
 	"github.com/andreychano/compressor-golang/internal/core/service"
 )
@@ -68,4 +70,14 @@ func (c *Compressor) Compress(r io.Reader, opts Options) ([]byte, Result, error)
 		MimeType: outFile.MimeType,
 		Size:     outFile.Size,
 	}, nil
+}
+
+// NewDefault creates a Compressor with default bimg processor
+// and local filesystem storage under the given base path.
+func NewDefault(basePath string) *Compressor {
+	proc := bimg.NewProcessor()
+	repo := local.NewLocalFileStorage(basePath)
+	svc := service.NewCompressionService(repo, proc)
+
+	return &Compressor{svc: svc}
 }
