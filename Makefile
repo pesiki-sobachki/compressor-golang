@@ -7,6 +7,12 @@ BIN_DIR  := ./bin
 # Default target: build the binary
 all: build
 
+COMMIT_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
+BUILD_TIME := $(shell date +%FT%T%z)
+
+LDFLAGS := -ldflags "-s -w -X main.CommitHash=$(COMMIT_HASH) -X main.BuildTime=$(BUILD_TIME)"
+GO_BUILD_FLAGS := -trimpath
+
 ########################################
 # Dependencies
 ########################################
@@ -38,6 +44,19 @@ build:
 run: build
 	@echo "==> Running $(APP_NAME)..."
 	$(BIN_DIR)/$(APP_NAME)
+
+##@ Builds
+
+
+build-linux:
+	@echo "Building Linux binary..."
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) $(LDFLAGS) -o build/$(BINARY_NAME)-linux $(CMD_API_PATH)
+	@echo "Build complete: build/$(BINARY_NAME)-linux"
+
+build-windows: swagger ## Build binary for Windows (AMD64)
+	@echo "Building Windows binary..."
+	@CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) $(LDFLAGS) -o build/$(BINARY_NAME)-windows.exe $(CMD_API_PATH)
+	@echo "Build complete: build/$(BINARY_NAME)-windows.exe"
 
 test:
 	@echo "==> Running tests..."

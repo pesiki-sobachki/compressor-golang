@@ -10,6 +10,11 @@ import (
 	"github.com/andreychano/compressor-golang/internal/core/service"
 )
 
+var (
+	CommitHash = "n/a"
+	BuildTime  = "n/a"
+)
+
 func main() {
 	storage := local.NewLocalFileStorage("storage")
 	processor := bimg.NewProcessor()
