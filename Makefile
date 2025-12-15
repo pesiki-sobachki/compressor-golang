@@ -46,3 +46,13 @@ test:
 clean:
 	@echo "==> Cleaning..."
 	rm -rf $(BIN_DIR)
+
+########################################
+# Audit
+########################################
+
+lint: ## Run golangci-lint
+	@golangci-lint run ./...
+
+lint-install: ## Install golangci-lint
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
