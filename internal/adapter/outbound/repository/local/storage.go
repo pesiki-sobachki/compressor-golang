@@ -6,26 +6,33 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/andreychano/compressor-golang/pkg/core/domain"
+	"github.com/andreychano/compressor-golang/internal/adapter/outbound/repository/local/pathvalidator"
+	"github.com/andreychano/compressor-golang/internal/core/domain"
 )
 
 type LocalFileStorage struct {
-	basePath string
+	basePath      string
+	pathValidator *pathvalidator.Validator
 }
 
+// NewLocalFileStorage initializes local storage and path validator.
 func NewLocalFileStorage(basePath string) *LocalFileStorage {
 	return &LocalFileStorage{
-		basePath: basePath,
+		basePath:      basePath,
+		pathValidator: pathvalidator.New(basePath),
 	}
 }
 
 func (s *LocalFileStorage) Save(ctx context.Context, file domain.File, relativePath string) (string, error) {
+	if err := s.pathValidator.Validate(relativePath); err != nil {
+		return "", fmt.Errorf("access denied: invalid path")
+	}
+
 	fullPath := filepath.Join(s.basePath, relativePath)
 
 	dir := filepath.Dir(fullPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
@@ -34,6 +41,7 @@ func (s *LocalFileStorage) Save(ctx context.Context, file domain.File, relativeP
 		return "", fmt.Errorf("failed to create file: %w", err)
 	}
 	defer dst.Close()
+
 	if _, err := file.Content.Seek(0, 0); err != nil {
 		return "", fmt.Errorf("failed to seek file content: %w", err)
 	}
@@ -46,28 +54,25 @@ func (s *LocalFileStorage) Save(ctx context.Context, file domain.File, relativeP
 }
 
 func (s *LocalFileStorage) Get(ctx context.Context, relativePath string) (domain.File, error) {
-
-	cleanRelative := filepath.Clean(relativePath)
-
-	if strings.Contains(cleanRelative, "..") || filepath.IsAbs(cleanRelative) {
-		return domain.File{}, fmt.Errorf("access denied: invalid path")
+	if err := s.pathValidator.Validate(relativePath); err != nil {
+		return domain.File{}, err
 	}
 
-	fullPath := filepath.Join(s.basePath, cleanRelative)
+	fullPath := filepath.Join(s.basePath, relativePath)
 
-	file, err := os.Open(fullPath)
+	f, err := os.Open(fullPath)
 	if err != nil {
 		return domain.File{}, fmt.Errorf("failed to open file: %w", err)
 	}
 
-	stat, err := file.Stat()
+	stat, err := f.Stat()
 	if err != nil {
-		file.Close()
+		f.Close()
 		return domain.File{}, fmt.Errorf("failed to get file info: %w", err)
 	}
 
 	return domain.File{
-		Content:  file,
+		Content:  f,
 		Size:     stat.Size(),
 		MimeType: "application/octet-stream",
 	}, nil
