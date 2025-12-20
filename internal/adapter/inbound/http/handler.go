@@ -3,18 +3,16 @@ package http
 import (
 	"errors"
 	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"path/filepath"
-	"strconv"
-
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/repository/local/pathvalidator"
 	"github.com/andreychano/compressor-golang/internal/core/domain"
 	"github.com/andreychano/compressor-golang/internal/core/service"
+	applogger "github.com/andreychano/compressor-golang/internal/logger"
+	"io"
+	"net/http"
+	"path/filepath"
+	"strconv"
+	"strings"
 )
-
-const maxUploadSize = 32 << 20 // 32 MB
 
 type Handler struct {
 	svc *service.CompressionService
@@ -31,16 +29,16 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
+
+	applogger.Log.Info().Msg("upload handler called")
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
-
-	dFile, dOptions, err := parseParamsStd(r)
+	dFile, dOptions, err := parseParamsStd(w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if closer, ok := dFile.Content.(io.Closer); ok {
@@ -49,10 +47,25 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 
 	savedPath, err := h.svc.CompressAndSave(r.Context(), dFile, dOptions)
 	if err != nil {
-		log.Printf("Upload failed: %v", err)
+		applogger.Log.Error().
+			Err(err).
+			Msg("upload failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	const mib = 1024 * 1024
+	sizeMiB := float64(dFile.Size) / float64(mib)
+	sizeMiBStr := fmt.Sprintf("%.2f", sizeMiB)
+
+	applogger.Log.Info().
+		Str("path", savedPath).
+		Int("quality", dOptions.Quality).
+		Str("format", dOptions.Format).
+		//Int64("size_bytes", dFile.Size).
+		Str("size_mib", sizeMiBStr).
+		Str("remote_addr", r.RemoteAddr).
+		Msg("upload succeeded")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -65,11 +78,8 @@ func (h *Handler) process(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
-
-	dFile, dOptions, err := parseParamsStd(r)
+	dFile, dOptions, err := parseParamsStd(w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if closer, ok := dFile.Content.(io.Closer); ok {
@@ -78,10 +88,20 @@ func (h *Handler) process(w http.ResponseWriter, r *http.Request) {
 
 	resultFile, err := h.svc.Process(dFile, dOptions)
 	if err != nil {
-		log.Printf("Process failed: %v", err)
+		applogger.Log.Error().
+			Err(err).
+			Msg("process failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	applogger.Log.Info().
+		Int("quality", dOptions.Quality).
+		Str("format", dOptions.Format).
+		Int64("input_size", dFile.Size).
+		Int64("output_size", resultFile.Size).
+		Str("remote_addr", r.RemoteAddr).
+		Msg("process succeeded")
 
 	filename := fmt.Sprintf("processed.%s", dOptions.Format)
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
@@ -89,7 +109,9 @@ func (h *Handler) process(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Length", strconv.FormatInt(resultFile.Size, 10))
 
 	if _, err := io.Copy(w, resultFile.Content); err != nil {
-		log.Printf("Failed to write response: %v", err)
+		applogger.Log.Error().
+			Err(err).
+			Msg("failed to write response")
 	}
 }
 
@@ -119,6 +141,12 @@ func (h *Handler) getFile(w http.ResponseWriter, r *http.Request) {
 		defer closer.Close()
 	}
 
+	applogger.Log.Info().
+		Str("path", path).
+		Int64("size", fileInfo.Size).
+		Str("remote_addr", r.RemoteAddr).
+		Msg("get file succeeded")
+
 	fileName := filepath.Base(path)
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, fileName))
 	w.Header().Set("Content-Type", "application/octet-stream")
@@ -127,10 +155,21 @@ func (h *Handler) getFile(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, fileInfo.Content)
 }
 
-func parseParamsStd(r *http.Request) (domain.File, domain.Options, error) {
-	file, header, err := r.FormFile("image")
+func parseParamsStd(w http.ResponseWriter, r *http.Request) (domain.File, domain.Options, error) {
+	file, header, err := r.FormFile("file")
 	if err != nil {
-		log.Printf("FormFile error: %v", err)
+		if strings.Contains(err.Error(), "http: request body too large") {
+			applogger.Log.Warn().
+				Err(err).
+				Msg("request body too large")
+			http.Error(w, "file too large", http.StatusRequestEntityTooLarge)
+			return domain.File{}, domain.Options{}, fmt.Errorf("request body too large: %w", err)
+		}
+
+		applogger.Log.Error().
+			Err(err).
+			Msg("FormFile error")
+		http.Error(w, "no file uploaded", http.StatusBadRequest)
 		return domain.File{}, domain.Options{}, fmt.Errorf("no file uploaded: %w", err)
 	}
 

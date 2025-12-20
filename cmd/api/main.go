@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	httpadapter "github.com/andreychano/compressor-golang/internal/adapter/inbound/http"
@@ -10,12 +9,15 @@ import (
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/repository/local"
 	"github.com/andreychano/compressor-golang/internal/config"
 	"github.com/andreychano/compressor-golang/internal/core/service"
+	applogger "github.com/andreychano/compressor-golang/internal/logger"
 )
 
 func main() {
 	ctx := context.Background()
 
 	cfg := config.MustLoad(ctx)
+
+	applogger.Init(cfg.Log)
 
 	storage := local.NewLocalFileStorage(cfg.Storage.Path)
 	processor := bimg.NewProcessor()
@@ -28,8 +30,14 @@ func main() {
 	maxBytes := cfg.HTTP.MaxUploadSizeBytes()
 	handler := httpadapter.MaxUploadSize(maxBytes, mux)
 
-	log.Printf("Starting server on %s...", cfg.HTTP.Address)
+	applogger.Log.Info().
+		Str("address", cfg.HTTP.Address).
+		Int64("max_bytes", maxBytes).
+		Msg("Starting server")
+
 	if err := http.ListenAndServe(cfg.HTTP.Address, handler); err != nil {
-		log.Fatalf("failed to start server: %v", err)
+		applogger.Log.Error().
+			Err(err).
+			Msg("failed to start server")
 	}
 }

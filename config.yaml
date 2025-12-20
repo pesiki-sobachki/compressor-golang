@@ -1,6 +1,6 @@
 http:
   address: ":8080"
-  max_upload_size_mb: 32
+  max_upload_size_mb: 20
   read_timeout: "10s"
   write_timeout: "15s"
   idle_timeout: "60s"
@@ -11,9 +11,10 @@ storage:
   tmp_subdir: "tmp"
 
 log:
-  level: "info" # debug/info/warn/error
-  format: "console" # console/json
-  with_caller: true
+  level: "info" # trace, debug, info, warn, error, fatal, panic, disabled
+  service: "compressor" # любое имя сервиса
+  console: true
+  json_output: false
 
 image:
   default_format: "jpeg"

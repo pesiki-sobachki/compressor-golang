@@ -72,7 +72,7 @@ func (s *CompressionService) CompressAndSave(ctx context.Context, file domain.Fi
 	uniqueID := uuid.New().String()
 	fileName := fmt.Sprintf("%s.%s", uniqueID, opts.Format)
 
-	filePath := filepath.Join(s.cfg.Storage.Path, s.cfg.Storage.CompressedSubdir, fileName)
+	filePath := filepath.Join(s.cfg.Storage.CompressedSubdir, fileName)
 
 	return s.repository.Save(ctx, compressedFile, filePath)
 }

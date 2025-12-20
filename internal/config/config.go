@@ -1,5 +1,9 @@
 package config
 
+import (
+	gotoolslog "github.com/shanth1/gotools/log"
+)
+
 type HTTP struct {
 	Address         string `yaml:"address"`
 	ReadTimeout     string `yaml:"read_timeout"`
@@ -18,12 +22,6 @@ type Storage struct {
 	TmpSubdir        string `yaml:"tmp_subdir"`
 }
 
-type Log struct {
-	Level      string `yaml:"level"`
-	Format     string `yaml:"format"`
-	WithCaller bool   `yaml:"with_caller"`
-}
-
 type Image struct {
 	DefaultFormat  string   `yaml:"default_format"`
 	DefaultQuality int      `yaml:"default_quality"`
@@ -33,8 +31,8 @@ type Image struct {
 }
 
 type Config struct {
-	HTTP    HTTP    `yaml:"http"`
-	Storage Storage `yaml:"storage"`
-	Log     Log     `yaml:"log"`
-	Image   Image   `yaml:"image"`
+	HTTP    HTTP              `yaml:"http"`
+	Storage Storage           `yaml:"storage"`
+	Log     gotoolslog.Config `yaml:"log"`
+	Image   Image             `yaml:"image"`
 }

@@ -4,14 +4,20 @@ import (
 	"context"
 	"log"
 
-	"github.com/shanth1/gotools/conf"
+	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 func Load(ctx context.Context) (Config, error) {
 	var cfg Config
 
-	//read from config.yaml
-	if err := conf.Load("config.yaml", &cfg); err != nil {
+	data, err := os.ReadFile("config.yaml")
+	if err != nil {
+		return Config{}, err
+	}
+
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return Config{}, err
 	}
 
