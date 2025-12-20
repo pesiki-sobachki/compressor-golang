@@ -6,7 +6,7 @@ http:
   max_upload_size_mb: 32
 
 storage:
-  path: "./storage_config"
+  path: "./storage"
   compressed_subdir: "compressed"
   tmp_subdir: "tmp"
 

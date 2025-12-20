@@ -10,7 +10,7 @@ import (
 func Load(ctx context.Context) (Config, error) {
 	var cfg Config
 
-	// читаем из файла config.yaml (или как ты его назовёшь)
+	//read from config.yaml
 	if err := conf.Load("config.yaml", &cfg); err != nil {
 		return Config{}, err
 	}
