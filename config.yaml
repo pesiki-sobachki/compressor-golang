@@ -1,9 +1,9 @@
 http:
   address: ":8080"
+  max_upload_size_mb: 32
   read_timeout: "10s"
   write_timeout: "15s"
   idle_timeout: "60s"
-  max_upload_size_mb: 32
 
 storage:
   path: "./storage"
