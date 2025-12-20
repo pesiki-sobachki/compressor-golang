@@ -25,8 +25,11 @@ func main() {
 	h := httpadapter.NewHandler(svc)
 	h.RegisterRoutes(mux)
 
+	maxBytes := cfg.HTTP.MaxUploadSizeBytes()
+	handler := httpadapter.MaxUploadSize(maxBytes, mux)
+
 	log.Printf("Starting server on %s...", cfg.HTTP.Address)
-	if err := http.ListenAndServe(cfg.HTTP.Address, mux); err != nil {
+	if err := http.ListenAndServe(cfg.HTTP.Address, handler); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
 }

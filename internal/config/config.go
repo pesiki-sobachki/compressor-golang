@@ -8,6 +8,10 @@ type HTTP struct {
 	MaxUploadSizeMB int64  `yaml:"max_upload_size_mb"`
 }
 
+func (h HTTP) MaxUploadSizeBytes() int64 {
+	return h.MaxUploadSizeMB * 1024 * 1024
+}
+
 type Storage struct {
 	Path             string `yaml:"path"`
 	CompressedSubdir string `yaml:"compressed_subdir"`
