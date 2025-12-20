@@ -22,20 +22,26 @@
 
 ```text
 /
-├── Makefile                          # Сборка и установка зависимостей (make deps/build/run)
-├── compressor/
-│   └── api.go                        # Публичный фасад и DTO для использования как библиотеки
+├── INSTALL.md                      # Установка системных зависимостей (libvips и т.п.)
+├── Makefile                        # Сборка и запуск (make deps/build/run)
+├── README.md                       # Документация проекта
+├── bin/
+│   └── api                         # Скомпилированный бинарник сервера
 ├── cmd/
 │   └── api/
-│       └── main.go                   # Точка входа приложения (HTTP-сервер)
-├── config.yaml                       # Конфигурация HTTP, storage, log, image
-├── go.mod                            # Модуль и зависимости Go
-├── go.sum                            # Контрольные суммы модулей Go
+│       └── main.go                 # Точка входа приложения (HTTP-сервер)
+├── compressor/
+│   └── api.go                      # Публичный фасад и DTO для использования как библиотеки
+├── config.yaml                     # Конфигурация HTTP, storage, log, image
+├── go.mod                          # Модуль и зависимости Go
+├── go.sum                          # Контрольные суммы модулей Go
 └── internal/
-    ├── adapter/                      # Адаптеры (реализации портов)
+    ├── adapter/                    # Адаптеры (реализации портов)
     │   ├── inbound/
     │   │   └── http/
-    │   │       └── handler.go        # HTTP-хендлеры (REST API)
+    │   │       ├── handler.go      # HTTP-хендлеры (REST API)
+    │   │       ├── middleware.go   # HTTP-мидлварь (лимит размера тела и др.)
+    │   │       └── middleware_test.go
     │   └── outbound/
     │       ├── processor/
     │       │   └── bimg/
@@ -46,18 +52,23 @@
     │               │   └── validator.go  # Валидация путей и защита от Path Traversal
     │               └── storage.go        # Локальное файловое хранилище
     ├── config/
-    │   ├── config.go                 # Структуры конфигурации (HTTP, Storage, Log, Image)
-    │   └── loader.go                 # Загрузка config.yaml
-    ├── logger/
-    │   └── logger.go                 # Инициализация структурированного логгера
-    └── core/                         # Домейн и бизнес-логика
-        ├── domain/
-        │   └── file.go               # Модели домена (файл, опции сжатия и т.п.)
-        ├── port/
-        │   ├── processor.go          # Порты для процессора изображений
-        │   └── repository.go         # Порты для хранилища файлов
-        └── service/
-            └── compression.go        # Сервисы сжатия и сохранения файлов
+    │   ├── config.go               # Структуры конфигурации (HTTP, Storage, Log, Image)
+    │   └── loader.go               # Загрузка config.yaml
+    ├── core/                       # Домейн и бизнес-логика
+    │   ├── domain/
+    │   │   └── file.go             # Модели домена (файл, опции сжатия и т.п.)
+    │   ├── port/
+    │   │   ├── generate.go         # генерация моков (go:generate)
+    │   │   ├── mocks/
+    │   │   │   ├── processor_mock.go
+    │   │   │   └── repository_mock.go
+    │   │   ├── processor.go        # Порты для процессора изображений
+    │   │   └── repository.go       # Порты для хранилища файлов
+    │   └── service/
+    │       ├── compression.go      # Сервисы сжатия и сохранения файлов
+    │       └── compression_test.go
+    └── logger/
+        └── logger.go               # Инициализация структурированного логгера
 ```
 
 
@@ -103,7 +114,7 @@ image:
 - `storage.path` и `storage.compressed_subdir` используются для построения пути `storage/compressed/<uuid>.<ext>`.  
 ```
 
-- `log.console: true` включает вывод всех логов в stdout; `json_output: false` — удобный для чтения формат.
+- `log.console: true` включает вывод всех логов в stdout; `json_output: false` — удобный для чтения формат.[^1]
 - `image.default_*` задают дефолтные опции, которые можно переопределить в запросе.
 
 
