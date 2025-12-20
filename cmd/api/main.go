@@ -1,28 +1,32 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
 
-	"github.com/gin-gonic/gin"
-
-	"github.com/andreychano/compressor-golang/internal/adapter/inbound/http"
+	httpadapter "github.com/andreychano/compressor-golang/internal/adapter/inbound/http"
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/processor/bimg"
 	"github.com/andreychano/compressor-golang/internal/adapter/outbound/repository/local"
+	"github.com/andreychano/compressor-golang/internal/config"
 	"github.com/andreychano/compressor-golang/internal/core/service"
 )
 
 func main() {
-	storage := local.NewLocalFileStorage("storage")
+	ctx := context.Background()
+
+	cfg := config.MustLoad(ctx)
+
+	storage := local.NewLocalFileStorage(cfg.Storage.Path)
 	processor := bimg.NewProcessor()
 	svc := service.NewCompressionService(storage, processor)
 
-	r := gin.Default()
+	mux := http.NewServeMux()
+	h := httpadapter.NewHandler(svc)
+	h.RegisterRoutes(mux)
 
-	h := http.NewHandler(svc)
-	h.RegisterRoutes(r)
-
-	log.Println("Starting server on :8080...")
-	if err := r.Run(":8080"); err != nil {
+	log.Printf("Starting server on %s...", cfg.HTTP.Address)
+	if err := http.ListenAndServe(cfg.HTTP.Address, mux); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
 }

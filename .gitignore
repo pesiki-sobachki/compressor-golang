@@ -4,3 +4,9 @@ storage/compressed/
 digest.txt
 gory-skaly-ozero-morein-kanada-tuchi-priroda-moraine-lake-ca.jpg
 tree.txt
+
+/bin/
+/*.log
+
+#image
+123.jpg
