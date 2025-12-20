@@ -1,4 +1,4 @@
-APP_NAME := api
+APP_NAME := compressor
 CMD_DIR  := ./cmd/api
 BIN_DIR  := ./bin
 
