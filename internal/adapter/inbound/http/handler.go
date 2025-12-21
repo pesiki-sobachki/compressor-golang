@@ -29,7 +29,6 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
-
 	applogger.Log.Info().Msg("upload handler called")
 
 	if r.Method != http.MethodPost {
@@ -45,7 +44,7 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 		defer closer.Close()
 	}
 
-	savedPath, err := h.svc.CompressAndSave(r.Context(), dFile, dOptions)
+	saved, err := h.svc.CompressAndSave(r.Context(), dFile, dOptions)
 	if err != nil {
 		applogger.Log.Error().
 			Err(err).
@@ -55,21 +54,28 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	const mib = 1024 * 1024
-	sizeMiB := float64(dFile.Size) / float64(mib)
-	sizeMiBStr := fmt.Sprintf("%.2f", sizeMiB)
+	origMiB := float64(dFile.Size) / float64(mib)
+	origMiBStr := fmt.Sprintf("%.2f", origMiB)
+
+	compMiB := float64(saved.CompressedSize) / float64(mib)
+	compMiBStr := fmt.Sprintf("%.2f", compMiB)
 
 	applogger.Log.Info().
-		Str("path", savedPath).
+		Str("path", saved.Path).
 		Int("quality", dOptions.Quality).
 		Str("format", dOptions.Format).
-		//Int64("size_bytes", dFile.Size).
-		Str("size_mib", sizeMiBStr).
+		Str("orig_size_mib", origMiBStr).
+		Str("compressed_size_mib", compMiBStr).
 		Str("remote_addr", r.RemoteAddr).
 		Msg("upload succeeded")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, `{"status":"success","compressed_path":"%s","message":"File saved successfully"}`, savedPath)
+	fmt.Fprintf(
+		w,
+		`{"status":"success","compressed_path":"%s","message":"File saved successfully"}`,
+		saved.Path,
+	)
 }
 
 func (h *Handler) process(w http.ResponseWriter, r *http.Request) {
@@ -95,11 +101,21 @@ func (h *Handler) process(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	const mib = 1024 * 1024
+
+	inputMiB := float64(dFile.Size) / float64(mib)
+	inputMiBStr := fmt.Sprintf("%.2f", inputMiB) // 14.06 [web:852]
+
+	outputMiB := float64(resultFile.Size) / float64(mib)
+	outputMiBStr := fmt.Sprintf("%.2f", outputMiB) // 0.72 [web:852]
+
 	applogger.Log.Info().
 		Int("quality", dOptions.Quality).
 		Str("format", dOptions.Format).
-		Int64("input_size", dFile.Size).
-		Int64("output_size", resultFile.Size).
+		//Int64("input_size", dFile.Size).
+		//Int64("output_size", resultFile.Size).
+		Str("input_size_mib", inputMiBStr).
+		Str("output_size_mib", outputMiBStr).
 		Str("remote_addr", r.RemoteAddr).
 		Msg("process succeeded")
 
@@ -131,14 +147,23 @@ func (h *Handler) getFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var vErr *pathvalidator.ValidationError
 		if errors.As(err, &vErr) {
+			applogger.Log.Warn().
+				Str("path", path).
+				Str("remote_addr", r.RemoteAddr).
+				Err(err).
+				Msg("path validation failed")
 			http.Error(w, vErr.Error(), http.StatusBadRequest)
 			return
 		}
+
+		applogger.Log.Error().
+			Str("path", path).
+			Str("remote_addr", r.RemoteAddr).
+			Err(err).
+			Msg("get file failed")
+
 		http.Error(w, "File not found or access denied", http.StatusNotFound)
 		return
-	}
-	if closer, ok := fileInfo.Content.(io.Closer); ok {
-		defer closer.Close()
 	}
 
 	applogger.Log.Info().

@@ -49,13 +49,16 @@ func TestCompressionService_CompressAndSave_Success(t *testing.T) {
 
 	repoMock.EXPECT().
 		Save(gomock.Any(), compressed, gomock.Any()).
-		Return("compressed/some-id.jpeg", nil)
+		Return(domain.SavedFile{
+			Path:           "compressed/some-id.jpeg",
+			CompressedSize: 123,
+		}, nil)
 
-	path, err := s.CompressAndSave(context.Background(), file, opts)
+	saved, err := s.CompressAndSave(context.Background(), file, opts)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if path == "" {
+	if saved.Path == "" {
 		t.Fatalf("expected non-empty path")
 	}
 }

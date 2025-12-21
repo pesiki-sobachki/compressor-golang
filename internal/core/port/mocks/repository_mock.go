@@ -51,10 +51,10 @@ func (mr *MockFileRepositoryMockRecorder) Get(ctx, path interface{}) *gomock.Cal
 }
 
 // Save mocks base method.
-func (m *MockFileRepository) Save(ctx context.Context, file domain.File, path string) (string, error) {
+func (m *MockFileRepository) Save(ctx context.Context, file domain.File, path string) (domain.SavedFile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Save", ctx, file, path)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(domain.SavedFile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

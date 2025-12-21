@@ -83,7 +83,6 @@ func NewDefault(basePath string) *Compressor {
 	proc := bimg.NewProcessor()
 	repo := local.NewLocalFileStorage(basePath)
 
-	// Минимальный конфиг для библиотечного использования без config.yaml.
 	cfg := config.Config{
 		Storage: config.Storage{
 			Path:             basePath,
@@ -97,7 +96,6 @@ func NewDefault(basePath string) *Compressor {
 			MaxHeight:      2160,
 			AllowFormats:   []string{"jpeg", "png", "webp"},
 		},
-		// HTTP/Log можно оставить нулями, т.к. здесь не используются.
 	}
 
 	svc := service.NewCompressionService(repo, cfg, proc)

@@ -42,7 +42,11 @@ func (s *CompressionService) Process(file domain.File, opts domain.Options) (dom
 	return selectedProcessor.Process(file, opts)
 }
 
-func (s *CompressionService) CompressAndSave(ctx context.Context, file domain.File, reqOpts domain.Options) (string, error) {
+func (s *CompressionService) CompressAndSave(
+	ctx context.Context,
+	file domain.File,
+	reqOpts domain.Options,
+) (domain.SavedFile, error) {
 	opts := domain.Options{
 		Format:    s.cfg.Image.DefaultFormat,
 		Quality:   s.cfg.Image.DefaultQuality,
@@ -50,7 +54,6 @@ func (s *CompressionService) CompressAndSave(ctx context.Context, file domain.Fi
 		MaxHeight: s.cfg.Image.MaxHeight,
 	}
 
-	//rewrite if client send opts
 	if reqOpts.Format != "" {
 		opts.Format = reqOpts.Format
 	}
@@ -66,12 +69,11 @@ func (s *CompressionService) CompressAndSave(ctx context.Context, file domain.Fi
 
 	compressedFile, err := s.Process(file, opts)
 	if err != nil {
-		return "", err
+		return domain.SavedFile{}, err
 	}
 
 	uniqueID := uuid.New().String()
 	fileName := fmt.Sprintf("%s.%s", uniqueID, opts.Format)
-
 	filePath := filepath.Join(s.cfg.Storage.CompressedSubdir, fileName)
 
 	return s.repository.Save(ctx, compressedFile, filePath)
