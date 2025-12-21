@@ -114,7 +114,7 @@ image:
 - `storage.path` и `storage.compressed_subdir` используются для построения пути `storage/compressed/<uuid>.<ext>`.  
 ```
 
-- `log.console: true` включает вывод всех логов в stdout; `json_output: false` — удобный для чтения формат.[^1]
+- `log.console: true` включает вывод всех логов в stdout; `json_output: false` — удобный для чтения формат.
 - `image.default_*` задают дефолтные опции, которые можно переопределить в запросе.
 
 
