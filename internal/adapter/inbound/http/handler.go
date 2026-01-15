@@ -41,7 +41,11 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if closer, ok := dFile.Content.(io.Closer); ok {
-		defer closer.Close()
+		defer func() {
+			if err := closer.Close(); err != nil {
+				applogger.Log.Error().Err(err).Msg("failed to close file in upload")
+			}
+		}()
 	}
 
 	saved, err := h.svc.CompressAndSave(r.Context(), dFile, dOptions)
@@ -71,11 +75,13 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(
+	if _, err := fmt.Fprintf(
 		w,
 		`{"status":"success","compressed_path":"%s","message":"File saved successfully"}`,
 		saved.Path,
-	)
+	); err != nil {
+		applogger.Log.Error().Err(err).Msg("failed to write success response")
+	}
 }
 
 func (h *Handler) process(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +95,11 @@ func (h *Handler) process(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if closer, ok := dFile.Content.(io.Closer); ok {
-		defer closer.Close()
+		defer func() {
+			if err := closer.Close(); err != nil {
+				applogger.Log.Error().Err(err).Msg("failed to close file in process")
+			}
+		}()
 	}
 
 	resultFile, err := h.svc.Process(dFile, dOptions)
@@ -177,7 +187,9 @@ func (h *Handler) getFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Length", strconv.FormatInt(fileInfo.Size, 10))
 
-	io.Copy(w, fileInfo.Content)
+	if _, err := io.Copy(w, fileInfo.Content); err != nil {
+		applogger.Log.Error().Err(err).Msg("failed to stream file to client")
+	}
 }
 
 func parseParamsStd(w http.ResponseWriter, r *http.Request) (domain.File, domain.Options, error) {

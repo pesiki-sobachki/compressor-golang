@@ -40,7 +40,9 @@ func (s *LocalFileStorage) Save(ctx context.Context, file domain.File, relativeP
 	if err != nil {
 		return domain.SavedFile{}, fmt.Errorf("failed to create file: %w", err)
 	}
-	defer dst.Close()
+	defer func() {
+		_ = dst.Close()
+	}()
 
 	if _, err := file.Content.Seek(0, 0); err != nil {
 		return domain.SavedFile{}, fmt.Errorf("failed to seek file content: %w", err)
@@ -75,7 +77,7 @@ func (s *LocalFileStorage) Get(ctx context.Context, relativePath string) (domain
 
 	stat, err := f.Stat()
 	if err != nil {
-		f.Close()
+		_ = f.Close()
 		return domain.File{}, fmt.Errorf("failed to get file info: %w", err)
 	}
 

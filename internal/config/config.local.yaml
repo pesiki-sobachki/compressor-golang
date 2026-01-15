@@ -9,7 +9,7 @@ logger:
   app: "compressor"
   service: "compressor-svc"
   level: "info"
-  udp_address: "127.0.0.1:1514"
+  udp_address: ""
   enable_caller: true
 
 storage:

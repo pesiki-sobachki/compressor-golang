@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	httpadapter "github.com/andreychano/compressor-golang/internal/adapter/inbound/http"
@@ -16,6 +17,13 @@ func main() {
 	ctx := context.Background()
 
 	cfg := config.MustLoad(ctx)
+
+	// --- ОТЛАДКА (ВРЕМЕННО) ---
+	// Это покажет нам, что реально загрузилось
+	fmt.Printf("DEBUG: Config Address: %s\n", cfg.HTTP.Address)
+	fmt.Printf("DEBUG: Logger Level: %s\n", cfg.Log.Level)
+	fmt.Printf("DEBUG: Logger UDP: '%s'\n", cfg.Log.UDPAddress)
+	// ---------------------------
 
 	applogger.Init(cfg.Log)
 
