@@ -26,21 +26,20 @@ deps-system: ## Install system dependencies (libvips) for Ubuntu/WSL
 	sudo apt update
 	sudo apt install -y build-essential libvips libvips-dev pkg-config
 
-env: ## Create .env file from example (если есть)
+env: ## Create .env file from example
 	@cp -n .env.example .env || true
 
 ##@ Development
 
 
-run-local: ## Run app in local mode
-	@go run $(CMD_API_PATH) -env=local
+run-local: ## Run app in local mode with .env file
+	@go run $(CMD_API_PATH) -env=local -env-path=.env
 
 run-dev: ## Run app in dev mode
-	@go run $(CMD_API_PATH) -env=dev
+	@go run $(CMD_API_PATH) -env=dev -env-path=.env
 
 run-prod: ## Run app in prod mode
-	@go run $(CMD_API_PATH) -env=prod
-
+	@go run $(CMD_API_PATH) -env=prod -env-path=.env
 
 run-watch: ## Run with live reload
 	@air -c .air.toml
