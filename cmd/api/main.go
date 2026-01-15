@@ -21,7 +21,7 @@ func main() {
 
 	storage := local.NewLocalFileStorage(cfg.Storage.Path)
 	processor := bimg.NewProcessor()
-	svc := service.NewCompressionService(storage, cfg, processor)
+	svc := service.NewCompressionService(storage, *cfg, processor)
 
 	mux := http.NewServeMux()
 	h := httpadapter.NewHandler(svc)
