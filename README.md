@@ -254,12 +254,8 @@ func main() {
 # Run unit tests
 make test
 
-# Run integration tests (requires libvips)
-make test-integ
-
 # Lint & format
 make lint
-make fmt
 ```
 
 ## 🙋‍♀️ Contributing
