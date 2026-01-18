@@ -9,7 +9,7 @@ logger:
     app: "compressor"
     service: "compressor-svc"
     level: "info"
-    udp_address: "log-collector:1514"
+    udp_address: "log-collector:1515"
     enable_caller: true
     console: false
 

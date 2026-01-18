@@ -8,7 +8,9 @@ storage
 /bin/
 /*.log
 
-#image
-123.jpg
+#images
+*.png
+*.jpeg
+*.jpg
 
 .env

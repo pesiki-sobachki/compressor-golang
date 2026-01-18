@@ -1,4 +1,4 @@
-.PHONY: help test lint clean build run docker-build swagger install-swag deps-system
+.PHONY: help test lint clean build build-dev build-linux run docker-build swagger install-swag deps env run-local run-dev run-prod run-watch format check
 
 # --- Project Variables ---
 BINARY_NAME := compressor
@@ -21,7 +21,7 @@ help: ## Show this help message
 
 ##@ Environment
 
-deps-system: ## Install system dependencies (libvips) for Ubuntu/WSL
+deps: ## Install system dependencies (libvips) for Ubuntu/WSL
 	@echo "Installing system dependencies..."
 	sudo apt update
 	sudo apt install -y build-essential libvips libvips-dev pkg-config
@@ -31,8 +31,7 @@ env: ## Create .env file from example
 
 ##@ Development
 
-
-run-local:
+run-local: ## Run app in local mode with .env
 	@cd $(shell pwd) && ENV_PATH=.env APP_ENV=local go run ./cmd/api/main.go -env-path=.env
 
 run-dev: ## Run app in dev mode
@@ -59,26 +58,42 @@ audit: ## Run vulnerability check
 ##@ Builds
 
 # ATTENTION! bimg need CGO_ENABLED=1
-build: ## Build binary for current OS
-	@echo "Building $(BINARY_NAME)..."
-	@CGO_ENABLED=1 go build $(GO_BUILD_FLAGS) $(LDFLAGS) -o bin/$(BINARY_NAME) $(CMD_API_PATH)
-	@echo "Build complete: bin/$(BINARY_NAME)"
 
+build: ## Build binary for current OS (default: LOCAL config)
+	@echo "Building $(BINARY_NAME) with LOCAL config..."
+	@CGO_ENABLED=1 APP_ENV=local \
+		go build $(GO_BUILD_FLAGS) $(LDFLAGS) \
+		-o bin/$(BINARY_NAME) $(CMD_API_PATH)
+	@echo "Build complete: bin/$(BINARY_NAME) (APP_ENV=local → config.local.yaml)"
 
-build-linux: ## Build binary for Linux (AMD64)
-	@echo "Building Linux binary..."
-	@CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) $(LDFLAGS) -o bin/$(BINARY_NAME)-linux $(CMD_API_PATH)
-	@echo "Build complete: bin/$(BINARY_NAME)-linux"
+build-local: ## Explicit local build (alias, LOCAL config)
+	@$(MAKE) build
+
+build-dev: ## Build binary for DEV config
+	@echo "Building $(BINARY_NAME)-dev with DEV config..."
+	@CGO_ENABLED=1 APP_ENV=dev \
+		go build $(GO_BUILD_FLAGS) $(LDFLAGS) \
+		-o bin/$(BINARY_NAME)-dev $(CMD_API_PATH)
+	@echo "Build complete: bin/$(BINARY_NAME)-dev (APP_ENV=dev → config.dev.yaml)"
+
+build-prod: ## Build binary for PROD config
+	@echo "Building $(BINARY_NAME)-prod with PROD config..."
+	@CGO_ENABLED=1 APP_ENV=prod \
+		go build $(GO_BUILD_FLAGS) $(LDFLAGS) \
+		-o bin/$(BINARY_NAME)-prod $(CMD_API_PATH)
+	@echo "Build complete: bin/$(BINARY_NAME)-prod (APP_ENV=prod → config.prod.yaml)"
 
 clean: ## Remove build artifacts
 	@rm -rf bin/
 
 ##@ Deployment
 
-docker-build: ## Build docker image
-	@echo "Building Docker image $(BINARY_NAME):$(DOCKER_TAG)..."
-	@docker build -t $(BINARY_NAME):$(DOCKER_TAG) -t $(BINARY_NAME):latest -f deployments/Dockerfile .
-
+docker-build: ## Build docker image (PROD, APP_ENV=prod inside image)
+	@echo "Building Docker image $(BINARY_NAME):$(DOCKER_TAG) with PROD config..."
+	@docker build \
+		-t $(BINARY_NAME):$(DOCKER_TAG) \
+		-t $(BINARY_NAME):latest \
+		-f deployments/Dockerfile .
 ##@ Quality Control
 
 format: ## Format code

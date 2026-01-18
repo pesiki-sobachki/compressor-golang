@@ -1,80 +1,113 @@
-# Сервис компрессии фотографий на Go
+# 📸 Image Compression Service (Go)
 
-Высокопроизводительный микросервис для сжатия и конвертации изображений, написанный на Go.
+[![Go Report Card](https://goreportcard.com/badge/github.com/pesiki-sobachki/compressor-golang)](https://goreportcard.com/report/github.com/pesiki-sobachki/compressor-golang)
+[![GitHub Release](https://img.shields.io/github/v/release/pesiki-sobachki/compressor-golang?style=flat-square)](https://github.com/pesiki-sobachki/compressor-golang/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Docker Pulls](https://img.shields.io/docker/pulls/pesiki-sobachki/compressor-golang?style=flat-square)](https://hub.docker.com/r/pesiki-sobachki/compressor-golang)
 
-Проект построен на принципах **Гексагональной архитектуры (Ports and Adapters)** и использует `libvips` через пакет `bimg` для быстрой и экономной по памяти обработки изображений.
+## 📖 Overview
 
-## 🚀 Возможности
+A high‑performance microservice for **image compression and format conversion**, written in Go.  
+The project follows **Hexagonal (Ports & Adapters) architecture** and uses **libvips** via the `bimg` wrapper for fast, low‑memory image processing.
 
-- **Два режима работы:**
+## 🗂 Table of Contents
 
-1. **Storage Mode:** сжатие и сохранение файла на диск сервера.
-2. **Streaming Mode:** сжатие «на лету» (in‑memory) и возврат результата без сохранения.
-- **Конвертация форматов:** поддержка JPEG, PNG, WEBP.
-- **Безопасность:** защита от Path Traversal при скачивании файлов.
-- **Чистая архитектура:** бизнес‑логика изолирована от фреймворков и конкретных библиотек.
-- **Структурированное логирование:** подробные логи запросов `/upload`, `/process` и `/file` с размерами файлов, путями и адресами клиентов.
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Quick Start](#-quick-start)
+- [Configuration](#-configuration)
+- [HTTP API](#-http-api)
+- [Using as a Go Library](#-using-as-a-go-library)
+- [Development & Testing](#-development--testing)
+- [Contributing](#-contributing)
+- [License](#-license)
 
+## 🚀 Features
 
-## 🏗 Архитектура проекта
+| ✅ | Description |
+|---|---|
+| **Dual operation modes** | *Storage Mode* – compress & persist to disk.<br>*Streaming Mode* – compress in‑memory and return the result instantly. |
+| **Format conversion** | Supports JPEG, PNG, and WEBP. |
+| **Security hardening** | Path‑traversal protection for file downloads. |
+| **Clean architecture** | Business logic lives in `internal/core`, completely isolated from frameworks and third‑party libraries. |
+| **Structured logging** | Correlation IDs, request sizes, client IPs, and error details are logged in JSON. |
+| **Config‑driven** | All runtime behavior is controlled via `config.yaml`. |
+| **Docker ready** | Multi‑stage Dockerfile for easy containerisation. |
 
-Проект следует рекомендациям `Standard Go Project Layout` с адаптерами и доменом в `internal/`.
+## 🏗 Architecture
 
-```text
+The repository follows the **Standard Go Project Layout** with a clear separation between adapters, core domain logic, and configuration.
+
+```
 /
-├── INSTALL.md                      # Установка системных зависимостей (libvips и т.п.)
-├── Makefile                        # Сборка и запуск (make deps/build/run)
-├── README.md                       # Документация проекта
-├── bin/
-│   └── api                         # Скомпилированный бинарник сервера
+├── INSTALL.md            # System‑level dependencies (libvips, build tools)
+├── Makefile              # Convenient tasks: deps, build, run, test
+├── README.md             # 📚 This file
 ├── cmd/
 │   └── api/
-│       └── main.go                 # Точка входа приложения (HTTP-сервер)
+│       └── main.go       # HTTP server entry point
 ├── compressor/
-│   └── api.go                      # Публичный фасад и DTO для использования как библиотеки
-├── config.yaml                     # Конфигурация HTTP, storage, log, image
-├── go.mod                          # Модуль и зависимости Go
-├── go.sum                          # Контрольные суммы модулей Go
-└── internal/
-    ├── adapter/                    # Адаптеры (реализации портов)
-    │   ├── inbound/
-    │   │   └── http/
-    │   │       ├── handler.go      # HTTP-хендлеры (REST API)
-    │   │       ├── middleware.go   # HTTP-мидлварь (лимит размера тела и др.)
-    │   │       └── middleware_test.go
-    │   └── outbound/
-    │       ├── processor/
-    │       │   └── bimg/
-    │       │       └── processor.go  # Адаптер процессора изображений (libvips/bimg)
-    │       └── repository/
-    │           └── local/
-    │               ├── pathvalidator/
-    │               │   └── validator.go  # Валидация путей и защита от Path Traversal
-    │               └── storage.go        # Локальное файловое хранилище
-    ├── config/
-    │   ├── config.go               # Структуры конфигурации (HTTP, Storage, Log, Image)
-    │   └── loader.go               # Загрузка config.yaml
-    ├── core/                       # Домейн и бизнес-логика
-    │   ├── domain/
-    │   │   └── file.go             # Модели домена (файл, опции сжатия и т.п.)
-    │   ├── port/
-    │   │   ├── generate.go         # генерация моков (go:generate)
-    │   │   ├── mocks/
-    │   │   │   ├── processor_mock.go
-    │   │   │   └── repository_mock.go
-    │   │   ├── processor.go        # Порты для процессора изображений
-    │   │   └── repository.go       # Порты для хранилища файлов
-    │   └── service/
-    │       ├── compression.go      # Сервисы сжатия и сохранения файлов
-    │       └── compression_test.go
-    └── logger/
-        └── logger.go               # Инициализация структурированного логгера
+│   └── api.go            # Public façade for library usage
+├── internal/
+│   ├── adapter/
+│   │   ├── inbound/
+│   │   │   └── http/     # HTTP handlers + middleware
+│   │   └── outbound/
+│   │       ├── processor/
+│   │       │   └── bimg/ # libvips implementation
+│   │       └── repository/
+│   │           └── local/ # Filesystem storage & path validation
+│   ├── config/
+│   │   ├── config.go     # Config structs
+│   │   └── loader.go     # YAML loader
+│   ├── core/
+│   │   ├── domain/
+│   │   │   └── file.go   # Domain models (File, Options, etc.)
+│   │   ├── port/
+│   │   │   ├── processor.go   # Processor port
+│   │   │   └── repository.go  # Repository port
+│   │   └── service/
+│   │       └── compression.go # Business use‑cases
+│   └── logger/
+│       └── logger.go    # Zap‑based structured logger
+├── config.yaml           # Default configuration (dev/prod overrides)
+├── go.mod / go.sum
+└── bin/
+    └── api               # Compiled binary
+```
+
+## ⚡ Quick Start
+
+### Prerequisites
+
+- **Linux** (Ubuntu/Debian) – the project relies on native `libvips`.  
+- `libvips` (≥ 8.9) – install via package manager.  
+- **Go 1.25.5+** – the module uses recent language features.
+
+```bash
+# System dependencies (Ubuntu/Debian)
+sudo apt-get update && sudo apt-get install -y libvips-dev build-essential
+
+# Clone the repo
+git clone https://github.com/pesiki-sobachki/compressor-golang.git
+cd compressor-golang
+```
+
+### Build & Run (Make)
+
+```bash
+# Install Go dependencies & compile the binary
+make deps      # go mod tidy + download libvips bindings
+make build     # produces ./bin/api with config.local.yaml
+
+# Run the server (default config.local.yaml → port 8080)
+make run-local             Run app in local mode with .env
 ```
 
 
-## 📦 Конфигурация и запуск
+## ⚙️ Configuration
 
-Настройки хранятся в `config.yaml` и загружаются при старте приложения. Текущая структура:
+Configuration lives in `internal/config/config.local.yaml`. Key sections:
 
 ```yaml
 http:
@@ -89,77 +122,41 @@ storage:
   compressed_subdir: "compressed"
   tmp_subdir: "tmp"
 
-log:
-  level: "info"          # trace, debug, info, warn, error, fatal, panic, disabled
-  service: "compressor"  # имя сервиса в логах
-  console: true          # вывод логов в консоль
-  json_output: false     # человекочитаемый вывод
+logger:
+  level: "info" #level of logger
+  service: "compressor-local" #servise name
+  console: true #console output
+  udp_address: "127.0.0.1:1515" #UDP address for logging
+  enable_caller: false # Enable caller info in logs
 
 image:
   default_format: "jpeg"
   default_quality: 50
   max_width: 3840
   max_height: 2160
-  allow_formats:
-    - "jpeg"
-    - "png"
-    - "webp"
+  allow_formats: ["jpeg", "png", "webp"]
 ```
 
-Ключевые моменты:
+- **HTTP** – port, upload limit, and timeout settings.  
+- **Storage** – root folder and sub‑folders for temporary and compressed files.  
+- **Logger** – JSON output to console (or optional UDP collector).  
+- **Image** – defaults for format, quality, and size constraints.
 
-- `http.max_upload_size_mb` задаёт максимальный размер входящего файла; в коде он конвертируется в байты и оборачивает `r.Body` через `http.MaxBytesReader`.
+## 🌐 HTTP API
 
-```
-- `storage.path` и `storage.compressed_subdir` используются для построения пути `storage/compressed/<uuid>.<ext>`.  
-```
+The service is reachable at `http://localhost:8080`.
 
-- `log.console: true` включает вывод всех логов в stdout; `json_output: false` — удобный для чтения формат.
-- `image.default_*` задают дефолтные опции, которые можно переопределить в запросе.
+### 1. Upload & Store (`POST /upload`)
 
+Compresses an image and saves it to disk.
 
-### Установка и запуск
+| Form field | Required | Description |
+|------------|----------|-------------|
+| `file` | ✅ | Binary image file (multipart). |
+| `format` | ❌ | `jpeg` | `png` | `webp` (default from config). |
+| `quality` | ❌ | 1‑100 (default from config). |
 
-Проект ориентирован на Linux (Ubuntu / Debian, включая WSL2) и требует установленного `libvips` и CGO.
-
-Подробная инструкция по системным зависимостям — в [`INSTALL.md`](./INSTALL.md).
-
-Быстрый старт:
-
-```bash
-# Клонируем репозиторий
-git clone https://github.com/pesiki-sobachki/compressor-golang.git
-cd compressor-golang
-
-# Устанавливаем системные и Go-зависимости (libvips, build-essential, модули Go)
-make deps
-
-# Собираем бинарник в ./bin/api
-make build
-
-# Запускаем сервер
-make run
-```
-
-По умолчанию HTTP‑сервер слушает порт `8080`, задаётся `http.address` в `config.yaml`.
-
-## 🛠 HTTP API
-
-Сервис работает на `http://localhost:8080` и предоставляет три основных эндпоинта.
-
-### 1. Загрузка и сохранение (Storage Mode)
-
-`POST /upload`
-
-Сжимает изображение и сохраняет его на диск сервера.
-
-**Параметры (multipart/form-data):**
-
-- `file` — файл (обязательно).
-- `format` — `jpeg` | `png` | `webp` (по умолчанию `image.default_format`, сейчас `jpeg`).
-- `quality` — `1-100` (по умолчанию `image.default_quality`, сейчас `50`, если не задано или некорректно).
-
-**Пример:**
+**cURL example**
 
 ```bash
 curl -X POST http://localhost:8080/upload \
@@ -168,7 +165,7 @@ curl -X POST http://localhost:8080/upload \
   -F "quality=80"
 ```
 
-**Ответ (JSON):**
+**Response**
 
 ```json
 {
@@ -178,19 +175,9 @@ curl -X POST http://localhost:8080/upload \
 }
 ```
 
-Поле `compressed_path` — это относительный путь, который потом используется в `/file`.
+### 2. Stream Compression (`POST /process`)
 
-***
-
-### 2. Сжатие «на лету» (Streaming Mode)
-
-`POST /process`
-
-Сжимает изображение в памяти и сразу возвращает результат в теле ответа (без сохранения на диск).
-
-**Параметры:** те же, что и у `/upload` (`file`, `format`, `quality`).
-
-**Пример:**
+Compresses in‑memory and streams the result back.
 
 ```bash
 curl -X POST http://localhost:8080/process \
@@ -200,34 +187,23 @@ curl -X POST http://localhost:8080/process \
   --output result.png
 ```
 
-Ответом будет бинарное содержимое сжатого файла с корректными заголовками `Content-Type`, `Content-Length` и `Content-Disposition`.
+The response contains the binary image with appropriate `Content‑Type`, `Content‑Length` and `Content‑Disposition` headers.
 
-***
+### 3. Download (`GET /file?path=<relative_path>`)
 
-### 3. Скачивание файла
-
-`GET /file`
-
-Скачивает ранее сохранённый файл по относительному пути из `compressed_path`.
-
-**Query‑параметры:**
-
-- `path` — относительный путь к файлу (значение `compressed_path`, например `storage/compressed/<uuid>.jpeg`).
-
-**Пример:**
+Retrieves a previously stored file.
 
 ```bash
 curl -v "http://localhost:8080/file?path=storage/compressed/<uuid>.jpeg" \
   --output downloaded.jpeg
 ```
 
-Если путь некорректен (Path Traversal и т.п.), вернётся `400 Bad Request`. Если файл не найден или доступ запрещён — `404 Not Found`.
+- **400 Bad Request** – invalid or unsafe path.  
+- **404 Not Found** – file missing or access denied.
 
-## 📚 Использование как библиотеки
+## 📦 Using the Service as a Go Library
 
-Помимо HTTP‑сервиса, проект можно использовать как Go‑библиотеку (через пакет `compressor`), чтобы выполнять сжатие изображений прямо из своего кода.
-
-Пример (адаптируй `module` под реальный `go.mod`):
+The same core can be imported directly:
 
 ```go
 package main
@@ -235,39 +211,71 @@ package main
 import (
     "os"
 
-    "github.com/andreychano/compressor-golang/compressor"
+    "github.com/pesiki-sobachki/compressor-golang/compressor"
 )
 
 func main() {
-    // Создаём компрессор с настройками по умолчанию (bimg + локальное файловое хранилище).
+    // Initialise with default storage location
     comp := compressor.NewDefault("./storage")
 
-    // Открываем входной файл.
-    f, err := os.Open("input.jpg")
+    // Open source image
+    src, err := os.Open("input.jpg")
     if err != nil {
         panic(err)
     }
-    defer f.Close()
+    defer src.Close()
 
-    // Задаём опции сжатия.
+    // Compression options
     opts := compressor.Options{
-        Format:    "webp", // целевой формат
-        Quality:   80,     // качество от 1 до 100
-        MaxWidth:  0,      // 0 = без ограничения по ширине
-        MaxHeight: 0,      // 0 = без ограничения по высоте
+        Format:   "webp",
+        Quality:  80,
+        MaxWidth: 0, // no width limit
+        MaxHeight: 0,
     }
 
-    // Выполняем сжатие.
-    data, meta, err := comp.Compress(f, opts)
+    // Perform compression
+    data, meta, err := comp.Compress(src, opts)
     if err != nil {
         panic(err)
     }
 
-    // Сохраняем результат в файл.
+    // Save result
     if err := os.WriteFile("output.webp", data, 0o644); err != nil {
         panic(err)
     }
 
-    _ = meta // meta.MimeType, meta.Size и т.п.
+    _ = meta // meta.MimeType, meta.Size, etc.
 }
 ```
+
+## 🧪 Development & Testing
+
+```bash
+# Run unit tests
+make test
+
+# Run integration tests (requires libvips)
+make test-integ
+
+# Lint & format
+make lint
+make fmt
+```
+
+## 🙋‍♀️ Contributing
+
+1. Fork the repository.  
+2. Create a feature branch (`git checkout -b feat/awesome`).  
+3. Write tests for your changes.  
+4. Ensure `make lint && make test` passes.  
+5. Open a Pull Request describing the change.
+
+Please adhere to the **Code of Conduct** and **conventional commit** style.
+
+## 📜 License
+
+Distributed under the **MIT License**. See `LICENSE` for details.
+
+--- 
+
+*Happy coding! 🎉*
