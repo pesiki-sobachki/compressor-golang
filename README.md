@@ -101,7 +101,7 @@ make deps      # go mod tidy + download libvips bindings
 make build     # produces ./bin/api with config.local.yaml
 
 # Run the server (default config.local.yaml → port 8080)
-make run-local             Run app in local mode with .env
+make run-local             #Run app in local mode with .env
 ```
 
 
