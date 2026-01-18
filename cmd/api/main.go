@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	httpadapter "github.com/andreychano/compressor-golang/internal/adapter/inbound/http"
@@ -18,14 +17,10 @@ func main() {
 
 	cfg := config.MustLoad(ctx)
 
+	applogger.Init(cfg.Log.ToGotoolsConfig())
+
 	// --- ОТЛАДКА (ВРЕМЕННО) ---
 	// Это покажет нам, что реально загрузилось
-	fmt.Printf("DEBUG: Config Address: %s\n", cfg.HTTP.Address)
-	fmt.Printf("DEBUG: Logger Level: %s\n", cfg.Log.Level)
-	fmt.Printf("DEBUG: Logger UDP: '%s'\n", cfg.Log.UDPAddress)
-	// ---------------------------
-
-	applogger.Init(cfg.Log)
 
 	storage := local.NewLocalFileStorage(cfg.Storage.Path)
 	processor := bimg.NewProcessor()
@@ -41,6 +36,7 @@ func main() {
 	applogger.Log.Info().
 		Str("address", cfg.HTTP.Address).
 		Int64("max_bytes", maxBytes).
+		Str("udp", cfg.Log.UDPAddress).
 		Msg("Starting server")
 
 	if err := http.ListenAndServe(cfg.HTTP.Address, handler); err != nil {

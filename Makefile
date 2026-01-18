@@ -32,8 +32,8 @@ env: ## Create .env file from example
 ##@ Development
 
 
-run-local: ## Run app in local mode with .env file
-	@go run $(CMD_API_PATH) -env=local -env-path=.env
+run-local:
+	@cd $(shell pwd) && ENV_PATH=.env APP_ENV=local go run ./cmd/api/main.go -env-path=.env
 
 run-dev: ## Run app in dev mode
 	@go run $(CMD_API_PATH) -env=dev -env-path=.env

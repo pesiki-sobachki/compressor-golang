@@ -1,5 +1,5 @@
 http:
-    address: ":8081"
+    address: ":8080"
     read_timeout: "10s"
     write_timeout: "15s"
     idle_timeout: "60s"
@@ -7,11 +7,11 @@ http:
 
 logger:
     app: "compressor"
-    service: "compressor-local"
+    service: "compressor-svc"
     level: "info"
-    udp_address: "127.0.0.1:1514"
-    enable_caller: false
-    console: true
+    udp_address: "log-collector:1514"
+    enable_caller: true
+    console: false
 
 storage:
     path: "./storage"

@@ -11,11 +11,34 @@ import (
 type Config struct {
 	Env consts.Env `yaml:"-" env:"APP_ENV" validate:"required,oneof=local dev stage prod"`
 
-	Log gotoolslog.Config `mapstructure:"logger" yaml:"logger" validate:"required"`
+	Log LoggerConfig `mapstructure:"logger" yaml:"logger" validate:"required"`
 
 	HTTP    HTTP    `mapstructure:"http" yaml:"http" validate:"required"`
 	Storage Storage `mapstructure:"storage" yaml:"storage" validate:"required"`
 	Image   Image   `mapstructure:"image" yaml:"image" validate:"required"`
+}
+
+// LoggerConfig оборачивает gotoolslog.Config и добавляет env-теги
+type LoggerConfig struct {
+	App          string `mapstructure:"app" yaml:"app" env:"LOGGER_APP"`
+	Service      string `mapstructure:"service" yaml:"service" env:"LOGGER_SERVICE"`
+	Level        string `mapstructure:"level" yaml:"level" env:"LOGGER_LEVEL"`
+	UDPAddress   string `mapstructure:"udp_address" yaml:"udp_address" env:"LOGGER_UDP"`
+	EnableCaller bool   `mapstructure:"enable_caller" yaml:"enable_caller" env:"LOGGER_ENABLE_CALLER"`
+	consts.Role
+	Console bool `mapstructure:"console" yaml:"console" env:"LOGGER_CONSOLE"`
+}
+
+// ToGotoolsConfig конвертирует LoggerConfig в gotoolslog.Config
+func (l LoggerConfig) ToGotoolsConfig() gotoolslog.Config {
+	return gotoolslog.Config{
+		App:          l.App,
+		Service:      l.Service,
+		Level:        l.Level,
+		UDPAddress:   l.UDPAddress,
+		EnableCaller: l.EnableCaller,
+		Console:      l.Console,
+	}
 }
 
 type HTTP struct {
